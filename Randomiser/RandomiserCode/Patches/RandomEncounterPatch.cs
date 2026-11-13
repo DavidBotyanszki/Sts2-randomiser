@@ -3,6 +3,7 @@ using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using HarmonyLib;
 using MegaCrit.Sts2.Core.Models;
+using MegaCrit.Sts2.Core.Models.Monsters;
 using MegaCrit.Sts2.Core.Random;
 using MegaCrit.Sts2.Core.Runs;
 
@@ -50,7 +51,9 @@ public static class RandomEncounterPatch
         // ModelDb.Monsters only walks act encounters, omitting standalone pets
         // and some event-only models. Read the complete registered model database.
         var models = (Dictionary<ModelId, AbstractModel>)RegisteredModels.GetValue(null)!;
-        MonsterModel[] pool = models.Values.OfType<MonsterModel>().OrderBy(monster => monster.Id.Category, StringComparer.Ordinal)
+        MonsterModel[] pool = models.Values.OfType<MonsterModel>()
+            .Where(monster => monster is not BigDummy)
+            .OrderBy(monster => monster.Id.Category, StringComparer.Ordinal)
             .ThenBy(monster => monster.Id.Entry, StringComparer.Ordinal).ToArray();
         if (pool.Length == 0)
             throw new InvalidOperationException("The monster database is empty.");
