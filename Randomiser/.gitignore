@@ -1,0 +1,15 @@
+bin/
+obj/
+/packages/
+riderModule.iml
+/_ReSharper.Caches/
+.idea/
+*.sln*
+*.csproj
+*.godot
+*.cfg
+*.props
+.godot/
+*.uid
+*.import
+.gitattributes
