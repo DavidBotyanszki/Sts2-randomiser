@@ -13,7 +13,13 @@ namespace Randomiser.RandomiserCode.Patches;
 public static class StartingAppearancePatch
 {
     [HarmonyPostfix]
-    public static void Postfix(Player __instance) => CombatAppearance.Roll(__instance);
+    public static void Postfix(Player __instance)
+    {
+        // Multiplayer selection is made by the host after its network service
+        // is initialized, then distributed before run/combat assets finish loading.
+        if (__instance.RunState.Players.Count == 1)
+            CombatAppearance.Roll(__instance);
+    }
 }
 
 [HarmonyPatch(typeof(Creature), nameof(Creature.CreateVisuals))]

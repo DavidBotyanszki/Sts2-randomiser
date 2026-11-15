@@ -116,7 +116,9 @@ public static class CombatRewardCardPoolPatch
     public static bool Prefix(Player __0, IEnumerable<CardModel> __1, CardCreationOptions __2,
         ref CardModel __result)
     {
-        if (__2.Source != CardCreationSource.Encounter)
+        // Relics/events use Other, including starting relic card rewards.
+        // Shop generation has its own source and is deliberately left alone.
+        if (__2.Source == CardCreationSource.Shop)
             return true;
 
         CardModel[] allCards = MultiplayerRandom.OrderedPool(ModelDb.AllCards);

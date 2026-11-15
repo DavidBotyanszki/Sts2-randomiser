@@ -8,7 +8,7 @@ public static class StartingHpPatch
     {
         var rng = StartingLoadoutPatch.GetRng(__result, "StartingHp")
             ?? throw new InvalidOperationException("Starting HP must be initialized with the shared run seed.");
-        int startingHp = rng.NextInt(1, 101);
+        int startingHp = rng.NextInt(40, 101);
         __result.Creature.SetMaxHpInternal(startingHp);
         __result.Creature.SetCurrentHpInternal(startingHp);
     }

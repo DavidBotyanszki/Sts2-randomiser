@@ -19,6 +19,7 @@ public static class RandomEncounterPatch
     private static readonly FieldInfo RegisteredModels = AccessTools.Field(typeof(ModelDb), "_contentById");
 
     public static bool IsRandomized(EncounterModel encounter) => Randomized.TryGetValue(encounter, out _);
+    public static bool IsAllowedEnemy(MonsterModel monster) => monster is not BigDummy and not Architect;
 
     // The original method still initializes the encounter RNG, stores the roster,
     // and validates mutable monsters. Only its roster-generation call is replaced.
@@ -52,7 +53,7 @@ public static class RandomEncounterPatch
         // and some event-only models. Read the complete registered model database.
         var models = (Dictionary<ModelId, AbstractModel>)RegisteredModels.GetValue(null)!;
         MonsterModel[] pool = models.Values.OfType<MonsterModel>()
-            .Where(monster => monster is not BigDummy)
+            .Where(IsAllowedEnemy)
             .OrderBy(monster => monster.Id.Category, StringComparer.Ordinal)
             .ThenBy(monster => monster.Id.Entry, StringComparer.Ordinal).ToArray();
         if (pool.Length == 0)
@@ -68,7 +69,7 @@ public static class RandomEncounterPatch
     {
         if (pool.Count == 0)
             throw new ArgumentException("The monster pool is empty.", nameof(pool));
-        int count = rng.NextInt(1, 5); // Upper bound is exclusive.
+        int count = rng.NextInt(1, 4); // 1-3 inclusive; upper bound is exclusive.
         var roster = new List<(MonsterModel, string?)>(count);
         for (int i = 0; i < count; i++)
         {

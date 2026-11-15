@@ -64,6 +64,10 @@ public static class CombatAppearance
         return new Rng(runSeed, $"Randomiser.CombatAppearance.v1/{playerId}").NextInt(modelCount);
     }
 
+    public static string GetSavedModel(Player player) => SavedModel.Get(player) ?? "";
+
+    public static void SetAuthoritativeModel(Player player, string modelId) => SavedModel.Set(player, modelId);
+
     public static NCreatureVisuals? CreateVisuals(Player player)
     {
         string saved = SavedModel.Get(player) ?? "";
@@ -102,6 +106,15 @@ public static class CombatAppearance
     {
         if (!Sources.TryGetValue(visuals, out AbstractModel? source))
             return;
+
+        // Player death and form cleanup unconditionally use this attachment in
+        // v0.113. Enemy scenes often omit it, which used to abort death/abandon.
+        if (visuals.FormVfxHolder == null)
+        {
+            var holder = new Control { Name = "RandomiserFormVfxHolder", MouseFilter = Control.MouseFilterEnum.Ignore };
+            visuals.AddChild(holder);
+            AccessTools.Field(typeof(NCreatureVisuals), "<FormVfxHolder>k__BackingField").SetValue(visuals, holder);
+        }
 
         if (source is MonsterModel monster)
         {
