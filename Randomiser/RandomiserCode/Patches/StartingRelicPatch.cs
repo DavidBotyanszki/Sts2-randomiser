@@ -11,12 +11,15 @@ public static class StartingRelicPatch
     [HarmonyPrefix]
     public static bool Prefix(Player __instance)
     {
+        var rng = StartingLoadoutPatch.GetRng(__instance, "StartingRelic");
+        if (rng == null)
+            return false;
         // AllRelics includes every relic pool and all characters' starter relics.
         // Deliberately bypass availability, unlock, rarity and character checks.
-        RelicModel[] relics = ModelDb.AllRelics.ToArray();
-        RelicModel relic = relics[System.Random.Shared.Next(relics.Length)].ToMutable();
+        RelicModel[] relics = MultiplayerRandom.OrderedPool(ModelDb.AllRelics);
+        RelicModel relic = relics[rng.NextInt(relics.Length)].ToMutable();
         relic.FloorAddedToDeck = 1;
-        SaveManager.Instance.MarkRelicAsSeen(relic);
+        SaveManager.Instance?.MarkRelicAsSeen(relic);
         __instance.AddRelicInternal(relic);
 
         // RunManager.FinalizeStartingRelics awaits AfterObtained once the run is

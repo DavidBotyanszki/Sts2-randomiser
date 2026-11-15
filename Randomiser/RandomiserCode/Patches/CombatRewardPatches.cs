@@ -64,7 +64,7 @@ public static class CombatRewardPatch
             {
                 // Keep real card pools in the options so normal reward save/load
                 // remains valid. The card factory patch below bypasses their filters.
-                var options = new CardCreationOptions(ModelDb.AllCardPools,
+                var options = new CardCreationOptions(MultiplayerRandom.OrderedPool(ModelDb.AllCardPools),
                     CardCreationSource.Encounter, CardRarityOddsType.Uniform);
                 var reward = new CardReward(options, OptionCount(cardTemplate), player)
                 {
@@ -85,7 +85,7 @@ public static class CombatRewardPatch
         if (original.OfType<RelicReward>().Any())
         {
             int count = rng.NextInt(0, 6);
-            RelicModel[] pool = ModelDb.AllRelics.ToArray();
+            RelicModel[] pool = MultiplayerRandom.OrderedPool(ModelDb.AllRelics);
             for (int i = 0; i < count; i++)
             {
                 // Predetermined mutable relics still use RelicReward.OnSelect,
@@ -119,7 +119,7 @@ public static class CombatRewardCardPoolPatch
         if (__2.Source != CardCreationSource.Encounter)
             return true;
 
-        CardModel[] allCards = ModelDb.AllCards.ToArray();
+        CardModel[] allCards = MultiplayerRandom.OrderedPool(ModelDb.AllCards);
         var alreadyOffered = __1.Select(card => card.Id).ToHashSet();
         CardModel[] pool = allCards.Where(card => !alreadyOffered.Contains(card.Id)).ToArray();
         if (pool.Length == 0)

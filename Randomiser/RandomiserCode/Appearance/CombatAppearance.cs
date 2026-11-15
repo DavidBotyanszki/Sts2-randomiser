@@ -9,6 +9,8 @@ using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.Nodes.Combat;
+using MegaCrit.Sts2.Core.Random;
+using MegaCrit.Sts2.Core.Runs;
 using MegaCrit.Sts2.Core.Saves.Runs;
 
 namespace Randomiser.RandomiserCode.Appearance;
@@ -31,17 +33,35 @@ public static class CombatAppearance
 
     public static void Roll(Player player)
     {
+        // A loaded/synchronized selection is authoritative. Never replace it
+        // when the player is initialized again (for example after rejoining).
+        if (!string.IsNullOrEmpty(SavedModel.Get(player)) || player.RunState is NullRunState)
+            return;
+
         AbstractModel[] models = ModelDb.AllCharacters.Cast<AbstractModel>()
             .Concat(ModelDb.Monsters)
             .Where(model => ResourceLoader.Exists(VisualsPath(model)))
             .DistinctBy(model => model.Id)
+            .OrderBy(model => model.Id.Category, StringComparer.Ordinal)
+            .ThenBy(model => model.Id.Entry, StringComparer.Ordinal)
             .ToArray();
         if (models.Length == 0)
             throw new InvalidOperationException("No combat appearance scenes are available.");
 
-        AbstractModel source = models[System.Random.Shared.Next(models.Length)];
+        // Every peer knows the same run seed and NetId. Rng's string salt uses
+        // the game's deterministic hash; this private stream consumes no shared
+        // gameplay RNG and is independent of player initialization order.
+        AbstractModel source = models[GetModelIndex(player.RunState.Rng.Seed, player.NetId, models.Length)];
         SavedModel.Set(player, $"{source.Id.Category}/{source.Id.Entry}");
         MainFile.Logger.Info($"Combat appearance for player {player.NetId}: {source.Id}");
+    }
+
+    public static int GetModelIndex(ulong runSeed, ulong netId, int modelCount)
+    {
+        if (modelCount <= 0)
+            throw new ArgumentOutOfRangeException(nameof(modelCount));
+        string playerId = netId.ToString("X16", System.Globalization.CultureInfo.InvariantCulture);
+        return new Rng(runSeed, $"Randomiser.CombatAppearance.v1/{playerId}").NextInt(modelCount);
     }
 
     public static NCreatureVisuals? CreateVisuals(Player player)

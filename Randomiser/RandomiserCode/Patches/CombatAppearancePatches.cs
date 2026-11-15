@@ -5,17 +5,15 @@ using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.Bindings.MegaSpine;
 using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.Nodes.Combat;
-using MegaCrit.Sts2.Core.Unlocks;
 using Randomiser.RandomiserCode.Appearance;
 
 namespace Randomiser.RandomiserCode.Patches;
 
-[HarmonyPatch(typeof(Player), nameof(Player.CreateForNewRun),
-    new[] { typeof(CharacterModel), typeof(UnlockState), typeof(ulong) })]
+[HarmonyPatch(typeof(Player), nameof(Player.InitializeSeed))]
 public static class StartingAppearancePatch
 {
     [HarmonyPostfix]
-    public static void Postfix(Player __result) => CombatAppearance.Roll(__result);
+    public static void Postfix(Player __instance) => CombatAppearance.Roll(__instance);
 }
 
 [HarmonyPatch(typeof(Creature), nameof(Creature.CreateVisuals))]

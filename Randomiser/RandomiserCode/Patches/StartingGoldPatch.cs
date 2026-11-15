@@ -1,18 +1,13 @@
-using HarmonyLib;
 using MegaCrit.Sts2.Core.Entities.Players;
-using MegaCrit.Sts2.Core.Models;
-using MegaCrit.Sts2.Core.Unlocks;
 
 namespace Randomiser.RandomiserCode.Patches;
 
-[HarmonyPatch(typeof(Player), nameof(Player.CreateForNewRun),
-    new[] { typeof(CharacterModel), typeof(UnlockState), typeof(ulong) })]
 public static class StartingGoldPatch
 {
-    [HarmonyPostfix]
     public static void Postfix(Player __result)
     {
-        // Next's upper bound is exclusive: every value from 1 through 100 is possible.
-        __result.Gold = System.Random.Shared.Next(1, 101);
+        var rng = StartingLoadoutPatch.GetRng(__result, "StartingGold")
+            ?? throw new InvalidOperationException("Starting gold must be initialized with the shared run seed.");
+        __result.Gold = rng.NextInt(1, 101);
     }
 }
