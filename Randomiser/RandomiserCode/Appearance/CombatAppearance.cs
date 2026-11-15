@@ -5,6 +5,7 @@ using HarmonyLib;
 using Godot;
 using MegaCrit.Sts2.Core.Animation;
 using MegaCrit.Sts2.Core.Bindings.MegaSpine;
+using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.Nodes.Combat;
@@ -117,10 +118,10 @@ public static class CombatAppearance
 
     // Called in place of CharacterModel.GenerateAnimator, before the original
     // character can request clips that do not exist on the replacement skeleton.
-    public static CreatureAnimator? CreateAnimator(CharacterModel character, MegaSprite sprite, NCreature node)
+    public static CreatureAnimator? CreateAnimator(CharacterModel character, MegaSprite sprite, Creature creature, NCreature node)
     {
         if (!Sources.TryGetValue(node.Visuals, out _))
-            return character.GenerateAnimator(sprite);
+            return character.GenerateAnimator(sprite, creature);
         if (!Animations.TryGetValue(node.Visuals, out CombatAnimationSet? clips) || clips.Idle == null)
             return null; // Static artwork or no idle clip: keep the scene's setup pose.
 
