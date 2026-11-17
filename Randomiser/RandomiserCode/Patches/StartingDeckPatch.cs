@@ -20,7 +20,7 @@ public static class StartingDeckPatch
         // including curses, statuses, event, quest and token cards.
         CardModel[] cards = MultiplayerRandom.OrderedPool(ModelDb.AllCards);
         CardModel[] attacks = cards.Where(card => card.Type == CardType.Attack).ToArray();
-        int deckSize = rng.NextInt(1, 21);
+        int deckSize = rng.NextInt(1, 11);
 
         for (int i = 0; i < deckSize; i++)
         {

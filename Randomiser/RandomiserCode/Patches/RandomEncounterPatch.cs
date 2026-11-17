@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using HarmonyLib;
+using MegaCrit.Sts2.Core.Combat;
 using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.Models.Monsters;
 using MegaCrit.Sts2.Core.Random;
@@ -19,7 +20,8 @@ public static class RandomEncounterPatch
     private static readonly FieldInfo RegisteredModels = AccessTools.Field(typeof(ModelDb), "_contentById");
 
     public static bool IsRandomized(EncounterModel encounter) => Randomized.TryGetValue(encounter, out _);
-    public static bool IsAllowedEnemy(MonsterModel monster) => monster is not BigDummy and not Architect;
+    public static bool IsAllowedEnemy(MonsterModel monster) =>
+        monster is not BigDummy and not Architect && monster.MaxInitialHp < 5000;
 
     // The original method still initializes the encounter RNG, stores the roster,
     // and validates mutable monsters. Only its roster-generation call is replaced.
@@ -80,6 +82,27 @@ public static class RandomEncounterPatch
         }
 
         return roster;
+    }
+}
+
+// These enemies' opening branches require named slots even when their artwork
+// uses automatic placement. Normalize at creation to cover summons and saved rosters.
+[HarmonyPatch(typeof(CombatState), nameof(CombatState.CreateCreature))]
+public static class RandomEncounterAiSlotPatch
+{
+    public static string? ResolveSlot(MonsterModel monster, string? slot) => monster switch
+    {
+        Exoskeleton or PhantasmalGardener => slot is "first" or "second" or "third" or "fourth" ? slot : "first",
+        Myte => slot is "first" or "second" ? slot : "first",
+        Wriggler => slot is "wriggler1" or "wriggler2" or "wriggler3" or "wriggler4" ? slot : "wriggler1",
+        _ => slot
+    };
+
+    [HarmonyPrefix]
+    public static void Prefix(CombatState __instance, MonsterModel monster, ref string? slot)
+    {
+        if (__instance.Encounter is { } encounter && RandomEncounterPatch.IsRandomized(encounter))
+            slot = ResolveSlot(monster, slot);
     }
 }
 

@@ -107,7 +107,7 @@ public static class CombatRewardPatch
 }
 
 // Replace only the single-card selection step. The outer factory retains normal
-// option counts, upgrade rolls and card reward hooks. Shops use a different source.
+// option counts, upgrade rolls and card reward hooks.
 [HarmonyPatch(typeof(CardFactory), nameof(CardFactory.CreateForReward),
     new[] { typeof(Player), typeof(IEnumerable<CardModel>), typeof(CardCreationOptions) })]
 public static class CombatRewardCardPoolPatch
@@ -116,11 +116,6 @@ public static class CombatRewardCardPoolPatch
     public static bool Prefix(Player __0, IEnumerable<CardModel> __1, CardCreationOptions __2,
         ref CardModel __result)
     {
-        // Relics/events use Other, including starting relic card rewards.
-        // Shop generation has its own source and is deliberately left alone.
-        if (__2.Source == CardCreationSource.Shop)
-            return true;
-
         CardModel[] allCards = MultiplayerRandom.OrderedPool(ModelDb.AllCards);
         var alreadyOffered = __1.Select(card => card.Id).ToHashSet();
         CardModel[] pool = allCards.Where(card => !alreadyOffered.Contains(card.Id)).ToArray();
